@@ -1,11 +1,12 @@
-import { View, StyleSheet, Alert } from "react-native";
+import { View, StyleSheet, Alert, Text, FlatList } from "react-native";
 import Title from "../components/ui/Title";
 import NumberContainer from "../components/game/NumberContainer";
 import { useState, useEffect } from "react";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import Card from "../components/ui/Card";
 import InstructionText from "../components/ui/InstructionText";
-import {Ionicons} from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
+import GuessLogItem from "../components/game/GuessLogItem";
 
 function generateRandomBetween(min, max, exclude) {
   const rndNum = Math.floor(Math.random() * (max - min)) + min;
@@ -17,7 +18,7 @@ function generateRandomBetween(min, max, exclude) {
 we then use max.floor to get us an integer value not a decimal 
 we then add min at the end to ensure 0 isnt our value. 
  if our exclude number is picked as a random number , we recursively call generateRandomBetweena again */
- 
+
   if (rndNum === exclude) {
     return generateRandomBetween(min, max, exclude);
   } else {
@@ -33,19 +34,19 @@ function GameScreen({ userNumber, onGameOver }) {
   //our exlcuded value is the one the user inputs , so the phone cant guess the usernumber
   const [currentGuess, setCurrentGuess] = useState(initialGuess); //set this random number as initial guess
   //useEffect allows you to run logic whenever some dependencies for some state change
-  const [guessRounds,setGuessRounds]=useState([initialGuess]);
+  const [guessRounds, setGuessRounds] = useState([initialGuess]);
 
   useEffect(() => {
     if (currentGuess === userNumber) {
       //tell react the game is over
-      onGameOver();
+      onGameOver(guessRounds.length);
     }
   }, [currentGuess, userNumber, onGameOver]); //these are dependencies  [varibles and functions]
   //used to update minBoundary and maxBoundary
-  useEffect(()=> {
-    minBoundary=1;
-    maxBoundary=100;
-  },[] );
+  useEffect(() => {
+    minBoundary = 1;
+    maxBoundary = 100;
+  }, []);
 
   function nextGuessHandler(direction) {
     //derive a new number up or down
@@ -71,8 +72,9 @@ function GameScreen({ userNumber, onGameOver }) {
       currentGuess
     );
     setCurrentGuess(newRndNumber);
-    setGuessRounds(prevGuessRounds=>[...prevGuessRounds,newRndNumber])
+    setGuessRounds((prevGuessRounds) => [newRndNumber, ...prevGuessRounds]);
   }
+  const guessRoundsListLength = guessRounds.length;
 
   return (
     <View style={styles.screen}>
@@ -86,19 +88,37 @@ function GameScreen({ userNumber, onGameOver }) {
         </InstructionText>
         <View style={styles.buttonsContainer}>
           <View style={styles.buttonContainer}>
-          <PrimaryButton onPress={nextGuessHandler.bind(this, "greater")}>
-            <Ionicons name='md-add' size={25} color="white"/>
-          </PrimaryButton>
+            <PrimaryButton onPress={nextGuessHandler.bind(this, "greater")}>
+              <Ionicons name="md-add" size={25} color="white" />
+            </PrimaryButton>
+          </View>
+          <View style={styles.buttonContainer}>
+            <PrimaryButton onPress={nextGuessHandler.bind(this, "lower")}>
+              <Ionicons name="md-remove" size={25} color="white" />
+            </PrimaryButton>
+          </View>
         </View>
-        <View style={styles.buttonContainer}>
-          <PrimaryButton onPress={nextGuessHandler.bind(this, "lower")}>
-          <Ionicons name='md-remove' size={25} color="white"/>
-          </PrimaryButton>
-        </View>
-        </View>
-        
       </Card>
-      <View>{/*Log Rounds*/}</View>
+      <View style={styles.listContainer}>
+        {/*guessRounds.map((guessRound) => (
+          <Text key={guessRound}>{guessRound}</Text>
+        ))*/}
+        {/*alternative for flatlist */}
+
+        <FlatList
+          data={guessRounds}
+          renderItem={(itemData) => (
+            <GuessLogItem
+              roundNumber={guessRoundsListLength - itemData.index}
+              guess={itemData.item}
+            />
+          )}
+          keyExtractor={
+            (item) =>
+              item /*used as key because we need a key but flatlist automatcally takes it from data but our data is just a number not an object with a key so we create one ourselves here*/
+          }
+        />
+      </View>
     </View>
   );
 }
@@ -119,6 +139,10 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flex: 1,
+  },
+  listContainer: {
+    flex: 1,
+    padding: 16,
   },
 });
 

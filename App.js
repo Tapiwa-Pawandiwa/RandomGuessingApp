@@ -28,9 +28,10 @@ export default function App() {
     setGameIsOver(false);
   }
   //change game state
-  function gameOverHandler() {
+  function gameOverHandler(numberOfRounds) {
     //function to be passed to game scrreen
     setGameIsOver(true);
+    setGuessRounds(numberOfRounds);
   }
   //helper variable
   function startNewGameHandler() {
